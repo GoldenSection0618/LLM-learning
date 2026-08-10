@@ -62,6 +62,7 @@ milestone/core-1-minimal-training
 ├── src/llm_learning/          # 可复用的 Python 实现
 ├── tests/                     # 与 src 模块对应的测试
 ├── docs/stages/               # 阶段说明、结果和故障记录
+├── third_party/minimind/       # 固定 revision 的 MiniMind submodule
 ├── data/                      # 下载的数据，不提交
 ├── checkpoints/               # 训练状态，不提交
 ├── outputs/                   # 指标、生成文本和模型产物，不提交
@@ -74,6 +75,7 @@ milestone/core-1-minimal-training
 - Notebook 文件名使用 `<两位阶段编号>_<topic>.ipynb` 模板。
 - 阶段文档放在 `docs/stages/<stage>_<topic>/`，说明和结果分别写入 `README.md` 与 `RESULTS.md`。
 - 项目计划、跨阶段约束和数据来源文档保留在仓库根目录。
+- 需要直接阅读和调用的第三方源码通过 Git submodule 固定 revision，不复制进项目源码包。
 - `data/`、`checkpoints/` 和 `outputs/` 只保存本地产物，由 `.gitignore` 排除。
 - `__pycache__`、`.pytest_cache`、Notebook checkpoint 和模型权重不进入 Git。
 
@@ -95,6 +97,7 @@ milestone/core-1-minimal-training
 - Notebook 调用 `src/llm_learning` 中的实现，并展示关键输入、输出和 Tensor shape。
 - 每个关键代码单元通常保留一条简短中文注释。复杂训练循环可以按阶段保留少量注释。
 - Notebook 提交前应完整执行。所有代码单元需要有执行记录，且不能包含错误输出。
+- 数学变量、公式和抽象 Tensor shape 使用 `$...$` 或 `$$...$$` 渲染；反引号只用于真实代码标识、字段值和命令。
 - 固定随机种子只能支持特定条件下的复现。描述结果时同时说明模型权重、输入、生成参数和运行环境等条件。
 - 实验只能支持当前输入、当前配置和当前实现时，结论需要明确限定范围。
 - 一个测试样例用于提供检查证据，不写成对全部输入的完整证明。
@@ -112,6 +115,7 @@ milestone/core-1-minimal-training
 - 一个长段落包含多个独立概念时，拆成短段落或有顺序的列表。
 - 先定义符号，再使用符号。相同字母表示不同概念时增加具有语义的下标。
 - 含义相近的术语必须分别定义，并保持用法一致。
+- 专有名词优先使用社区通用英文；只有存在稳定、常用的中文译名时才使用中文。
 - 结论强度必须与证据一致。单次实验不扩展成普遍规律，趋势不写成保证。
 - 技术事实发生变化时同步更新 Notebook、阶段文档和结果记录。
 

@@ -1,0 +1,26 @@
+{
+  "lm_eval_version": "0.4.12",
+  "lm_eval_commit": "6d64254",
+  "trust_remote_code": true,
+  "tasks": {
+    "ceval-valid": "617524a00b307ff6f9933702f724131fe12ca7ce",
+    "cmmlu": "efcc940752ea4a1ea94d2727f11f83858d64fc8e",
+    "arc_easy": "210d026faf9955653af8916fad021475a3f00453",
+    "piqa": "142f6d7367fd9877f0fb3b5734ea6a545f54cdd1",
+    "openbookqa": "388097ea7776314e93a529163e0fea805b8a6454",
+    "hellaswag": "218ec52e09a7e7462a5400043bb9a69a41d06b76",
+    "social_iqa": "8835ceb9141d7896d9d968634a9b21ae440e3ec5"
+  },
+  "task_sources": {
+    "ceval-valid": "ceval",
+    "cmmlu": "cmmlu",
+    "arc_easy": "arc",
+    "piqa": "piqa",
+    "openbookqa": "openbookqa",
+    "hellaswag": "hellaswag",
+    "social_iqa": "siqa"
+  },
+  "batch_size": 16,
+  "device": "cuda:0",
+  "apply_chat_template": true
+}

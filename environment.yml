@@ -6,13 +6,15 @@ dependencies:
   - pytorch-gpu=2.9.1
   - cuda-version=12.9
   - transformers=5.14.1
-  - datasets=5.0.1
+  - datasets=3.6.0
   - accelerate=1.14.0
   - jupyterlab=4.6.2
   - ipykernel=7.3.0
+  - ipywidgets
   - tensorboard=2.20.0
   - matplotlib
   - pytest
   - pip
   - pip:
       - -e .
+      - lm-eval[hf]==0.4.12

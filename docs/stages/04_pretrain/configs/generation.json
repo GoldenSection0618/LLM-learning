@@ -1,0 +1,25 @@
+{
+  "prompts": [
+    "为什么天空是蓝色的",
+    "解释什么是机器学习",
+    "推荐一些中国的美食"
+  ],
+  "greedy": {
+    "do_sample": false,
+    "temperature": 1.0,
+    "top_k": 0,
+    "top_p": 1.0,
+    "max_new_tokens": 128,
+    "eos_token_id": 2,
+    "seed": 2026
+  },
+  "sampling": {
+    "do_sample": true,
+    "temperature": 0.85,
+    "top_k": 50,
+    "top_p": 0.95,
+    "max_new_tokens": 128,
+    "eos_token_id": 2,
+    "seed": 2026
+  }
+}

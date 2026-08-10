@@ -94,5 +94,5 @@ generated.txt
 python -m pytest -q tests/tinygpt/test_tinygpt.py
 ```
 
-测试覆盖 shape、因果遮罩、未来信息隔离、超长生成上下文裁剪、参数规模、单批次过拟合
+测试覆盖 shape、causal mask、未来信息隔离、超长生成上下文裁剪、参数规模、单批次过拟合
 和 validation loss 的 token 加权。

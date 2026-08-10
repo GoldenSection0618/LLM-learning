@@ -50,28 +50,21 @@ Did tell you, a royal m
 
 ## 完整 forward 张量流
 
-记录使用 `B=2`、`T=128`、`D=256`、`H=4`、`head_dim=64` 和
-`V_vocab=65`：
+记录使用 $B=2$、$T=128$、$D=256$、$H=4$、$d_{\mathrm{head}}=64$ 和 $V=65$：
 
-```text
-input_ids                        (2, 128)
-token_embedding                  (2, 128, 256)
-position_embedding               (128, 256)
-embedding                        (2, 128, 256)
-block_0.attention.queries        (2, 4, 128, 64)
-block_0.attention.keys           (2, 4, 128, 64)
-block_0.attention.values         (2, 4, 128, 64)
-block_0.attention.scores         (2, 4, 128, 128)
-block_0.attention.weights        (2, 4, 128, 128)
-block_0.attention.output         (2, 128, 256)
-block_0.hidden_states            (2, 128, 256)
-block_1.hidden_states            (2, 128, 256)
-block_2.hidden_states            (2, 128, 256)
-block_3.hidden_states            (2, 128, 256)
-hidden_states                    (2, 128, 256)
-logits                           (2, 128, 65)
-loss                             ()
-```
+| Tensor | 形状 |
+| --- | --- |
+| input IDs | $2\times128$ |
+| token embedding | $2\times128\times256$ |
+| position embedding | $128\times256$ |
+| embedding | $2\times128\times256$ |
+| block 0 attention Q/K/V | $2\times4\times128\times64$ |
+| block 0 attention scores/weights | $2\times4\times128\times128$ |
+| block 0 attention output | $2\times128\times256$ |
+| block 0～3 hidden states | $2\times128\times256$ |
+| final hidden states | $2\times128\times256$ |
+| logits | $2\times128\times65$ |
+| loss | scalar |
 
 四个 block 的 Q、K、V 和 attention score 形状相同。完整逐层记录由训练命令写入
 `outputs/tinygpt/forward_trace.json`。

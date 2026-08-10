@@ -89,8 +89,8 @@ MiniMind 阶段的客观评估直接采用 MiniMind 官方横评使用的 `lm-ev
 | 0 | 语言模型张量与 loss | 无 | 约 8 小时（实际 6 + 复习 2） | 第 1 周 |
 | 1 | 最小训练循环 | Bigram LM | 约 6 小时（实际 4.5 + 复习 1.5）；拓展另加 2～4 小时 | 第 1 周 |
 | 2 | 最小 Transformer | 1M～10M TinyGPT | 约 9 小时（实际 7 + 复习 2） | 第 1 周 |
-| 3 | 阅读现代模型结构 | 缩小版 MiniMind | 5～6.5 小时 | 第 2 周 |
-| 4 | 从头预训练 | MiniMind 64M | 13～17 小时 | 第 2 周 |
+| 3 | 阅读现代模型结构 | 缩小版 MiniMind | 5～6.5 小时（实际主动投入 20 小时） | 第 2 周 |
+| 4 | 从头预训练 | MiniMind 64M | 13～17 小时（实际主动投入 4 小时） | 第 2 周 |
 | 5 | 监督微调 | MiniMind 64M | 13～17 小时 | 第 2～3 周 |
 | 6 | LoRA | MiniMind 64M | 5～6.5 小时 | 第 3 周 |
 | 7 | DPO | MiniMind 64M | 12～15.5 小时 | 第 3～4 周 |
@@ -147,17 +147,17 @@ MiniMind 阶段的客观评估直接采用 MiniMind 官方横评使用的 `lm-ev
 
 张量关系：
 
-```text
-input_ids: [B, T]
-logits:    [B, T, V]
-labels:    [B, T]
-```
+| Tensor | 数学表示 | 所属空间 |
+| --- | --- | --- |
+| input IDs | $\mathbf{X}$ | $\mathbb{N}^{B\times T}$ |
+| logits | $\mathbf{Z}$ | $\mathbb{R}^{B\times T\times V}$ |
+| labels | $\mathbf{Y}$ | $\mathbb{N}^{B\times T}$ |
 
 其中：
 
-- `B`：batch size
-- `T`：sequence length
-- `V`：vocabulary size
+- $B$：batch size
+- $T$：sequence length
+- $V$：vocabulary size
 
 loss 的本质是每个位置的 next-token cross entropy。
 
@@ -183,9 +183,9 @@ loss 的本质是每个位置的 next-token cross entropy。
 
 1. 使用 tokenizer 编码一句话；
 2. 打印 token ID；
-3. 构造 `[B, T]` 输入；
+3. 构造 $\mathbf{X}\in\mathbb{N}^{B\times T}$ 输入；
 4. 构造 shifted labels；
-5. 随机生成 `[B, T, V]` logits；
+5. 随机生成 $\mathbf{Z}\in\mathbb{R}^{B\times T\times V}$ logits；
 6. 调用 `F.cross_entropy`；
 7. 打印每个张量的 shape。
 
@@ -321,16 +321,17 @@ class TinyGPT(nn.Module):
     ...
 ```
 
-至少打印一次完整张量流：
+至少打印一次完整张量流。记隐藏维度为 $D$，attention head 数为 $H$，单个 head 的
+维度为 $d_{\mathrm{head}}$：
 
-```text
-input_ids          [B,T]
-embedding          [B,T,D]
-Q/K/V              [B,H,T,head_dim]
-attention scores   [B,H,T,T]
-hidden states      [B,T,D]
-logits             [B,T,V]
-```
+| Tensor | 所属空间 |
+| --- | --- |
+| input IDs | $\mathbb{N}^{B\times T}$ |
+| embedding | $\mathbb{R}^{B\times T\times D}$ |
+| Q/K/V | $\mathbb{R}^{B\times H\times T\times d_{\mathrm{head}}}$ |
+| attention scores | $\mathbb{R}^{B\times H\times T\times T}$ |
+| hidden states | $\mathbb{R}^{B\times T\times D}$ |
+| logits | $\mathbb{R}^{B\times T\times V}$ |
 
 #### 2.3　阶段交付物
 
@@ -426,6 +427,10 @@ num_key_value_heads: 2
 ### 阶段 4　MiniMind 从头预训练
 
 > **预计总投入**　13～17 小时，其中首次学习 10～13 小时，第三天复习 3～4 小时
+>
+> **时间记录**　实际主动学习 4 小时；训练、生成和评估在休息时间运行，不计入学习时长
+>
+> **预算校准**　阶段 3～4 实际主动投入合计 24 小时，计划合计 18～23.5 小时，未超过 20% 调整阈值；阶段 5 之后的预算保持不变
 >
 > **阶段目标**　掌握 MiniMind 的完整预训练流程，并建立可复现的训练与评估记录。
 
@@ -743,7 +748,7 @@ MiniMind 的 DPO 实现会直接计算 policy model 和 reference model 对 chos
 - SFT、Reward Model、PPO、DPO、GRPO 和蒸馏分别使用什么训练信号；
 - offline preference optimization 与 online RL 的区别；
 - policy model 与 reference model 的区别；
-- `beta` 的作用；
+- $\beta$ 的作用；
 - DPO 可能使输出变长的原因；
 - preference 数据质量比 loss 下降更重要的原因；
 - DPO 造成能力退化的可能原因。
@@ -764,7 +769,7 @@ Sequence-level Distillation 固定使用 `openai/gsm8k` 的 `main` 配置。阶�
 
 Teacher 固定使用已完成后训练的 `Qwen/Qwen3-4B`，批量生成 reasoning 与 final answer，再由 Math-Verify 对照 GSM8K gold answer 自动验证。只有验证通过的 Teacher response 进入 MiniMind SFT 数据；其余结果只保留自动状态，不进行人工改写、补标或筛选。
 
-该任务只验收 `公开 prompt → Teacher response → 自动验证 → MiniMind Student SFT` 的数据流，不形成正式蒸馏结论，也不扩大数据量或训练矩阵。
+该任务只验收“公开 prompt → Teacher response → 自动验证 → MiniMind Student SFT”的数据流，不形成正式蒸馏结论，也不扩大数据量或训练矩阵。
 
 #### 8.2　任务一：Sequence-level Distillation
 
