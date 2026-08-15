@@ -1,0 +1,15 @@
+{
+  "profile": "lora_rank16",
+  "base_sft_config": "docs/stages/05_sft/configs/mini64.json",
+  "base_weights_path": "checkpoints/minimind/stage4/mini64/weights_step_9908.pth",
+  "base_weights_sha256": "3b9f475ca67a8fb98824633b9e93fe8577d9faf5bd19d8da250c48bf8889f06e",
+  "rank": 16,
+  "target_modules": [
+    "q_proj",
+    "o_proj"
+  ],
+  "learning_rate": 0.0001,
+  "stop_after_step": 56480,
+  "output_dir": "outputs/minimind/stage6/rank16",
+  "checkpoint_dir": "checkpoints/minimind/stage6/rank16"
+}

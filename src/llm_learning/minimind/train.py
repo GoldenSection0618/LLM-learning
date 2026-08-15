@@ -9,7 +9,7 @@ import random
 import time
 from contextlib import nullcontext
 from pathlib import Path
-from typing import Any, Callable, Iterable, Sequence
+from typing import Any, Callable, Iterable, Mapping, Sequence
 
 import torch
 from torch import nn
@@ -193,6 +193,8 @@ DatasetFactory = Callable[
 ManifestFactory = Callable[..., dict[str, Any]]
 SplitResolver = Callable[[dict[str, Any]], tuple[list[int], list[int]]]
 RecordsLoader = Callable[[Path], RecordCollection]
+ModelSetup = Callable[[nn.Module], Mapping[str, Any] | None]
+WeightsExporter = Callable[[Path, nn.Module], None]
 
 
 def build_pretrain_dataset(
@@ -220,6 +222,10 @@ def run_training(
     split_resolver: SplitResolver = resolve_split_row_ids,
     records_loader: RecordsLoader = load_json_dataset,
     initial_weights_path: Path | None = None,
+    model_setup: ModelSetup | None = None,
+    weights_exporter: WeightsExporter = export_model_weights,
+    weights_prefix: str = "weights",
+    run_metadata: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """执行一次固定配置的单卡 causal LM 训练。"""
     seed_everything(config.seed)
@@ -252,6 +258,19 @@ def run_training(
         )
         model.load_state_dict(state_dict, strict=True)
         initial_weights_sha256 = sha256_file(initial_weights_path)
+    model_setup_info: dict[str, Any] = {}
+    if model_setup is not None:
+        setup_result = model_setup(model)
+        if setup_result is not None:
+            model_setup_info = dict(setup_result)
+    trainable_parameters = [
+        parameter for parameter in model.parameters() if parameter.requires_grad
+    ]
+    if not trainable_parameters:
+        raise ValueError("model contains no trainable parameters")
+    if not weights_prefix:
+        raise ValueError("weights_prefix cannot be empty")
+
     tokenizer_info = tokenizer_identity(config.source_dir / "model", tokenizer)
     print(f"[setup] loading dataset: {config.data_path}", flush=True)
     records = records_loader(config.data_path)
@@ -273,8 +292,11 @@ def run_training(
         }
     train_row_ids, validation_row_ids = split_resolver(manifest)
     save_manifest(config.output_dir / "data_manifest.json", manifest)
+    runtime_config = config.to_dict()
+    if run_metadata is not None:
+        runtime_config["training_extension"] = dict(run_metadata)
     (config.output_dir / "config.json").write_text(
-        json.dumps(config.to_dict(), ensure_ascii=False, indent=2) + "\n",
+        json.dumps(runtime_config, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
 
@@ -308,9 +330,16 @@ def run_training(
         device,
     )
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate)
+    optimizer = torch.optim.AdamW(
+        trainable_parameters,
+        lr=config.learning_rate,
+    )
     scaler = make_grad_scaler(device, config.dtype)
     planned_steps = total_optimizer_steps(config, len(train_dataset))
+    optimizer_steps_per_epoch = math.ceil(
+        math.ceil(len(train_dataset) / config.batch_size)
+        / config.accumulation_steps
+    )
     if stop_after_step is not None and not 1 <= stop_after_step <= planned_steps:
         raise ValueError(
             f"stop_after_step must be between 1 and {planned_steps}"
@@ -318,7 +347,8 @@ def run_training(
     print(
         f"[setup] train_rows={len(train_dataset)} "
         f"validation_rows={len(validation_dataset)} "
-        f"optimizer_steps={planned_steps}",
+        f"optimizer_steps={planned_steps} "
+        f"optimizer_steps_per_epoch={optimizer_steps_per_epoch}",
         flush=True,
     )
     early_stop = (
@@ -350,7 +380,7 @@ def run_training(
             model=model,
             optimizer=optimizer,
             scaler=scaler,
-            expected_config=config.to_dict(),
+            expected_config=runtime_config,
             expected_tokenizer=tokenizer_info,
             expected_data_manifest=compact_manifest(manifest),
             device=device,
@@ -371,7 +401,10 @@ def run_training(
         }
         history.append(metric)
         append_metric(metrics_path, metric)
-        export_model_weights(config.checkpoint_dir / "weights_step_0.pth", model)
+        weights_exporter(
+            config.checkpoint_dir / f"{weights_prefix}_step_0.pth",
+            model,
+        )
         print(
             f"[eval] step=0 loss={initial_eval['loss']:.4f} "
             f"ppl={initial_eval['perplexity']:.2f}",
@@ -444,7 +477,7 @@ def run_training(
 
             scaler.unscale_(optimizer)
             grad_norm = torch.nn.utils.clip_grad_norm_(
-                model.parameters(),
+                trainable_parameters,
                 config.gradient_clip,
             )
             grad_norm = grad_norm.item()
@@ -462,6 +495,9 @@ def run_training(
             optimizer.zero_grad(set_to_none=True)
 
             optimizer_step += 1
+            epoch_step = math.ceil(
+                training_state["next_batch"] / config.accumulation_steps
+            )
             training_state["optimizer_step"] = optimizer_step
             training_state["trained_tokens"] += group_tokens
             training_state["microbatches_in_update"] = 0
@@ -512,6 +548,8 @@ def run_training(
                 append_metric(metrics_path, eval_metric)
                 print(
                     f"step={optimizer_step}/{planned_steps} "
+                    f"epoch={epoch + 1}/{config.epochs} "
+                    f"epoch_step={epoch_step}/{optimizer_steps_per_epoch} "
                     f"train_loss={train_metric['loss']:.4f} "
                     f"eval_loss={evaluation['loss']:.4f} "
                     f"ppl={evaluation['perplexity']:.2f} "
@@ -535,6 +573,7 @@ def run_training(
                 print(
                     f"step={optimizer_step}/{planned_steps} "
                     f"epoch={epoch + 1}/{config.epochs} "
+                    f"epoch_step={epoch_step}/{optimizer_steps_per_epoch} "
                     f"train_loss={train_metric['loss']:.4f} "
                     f"lr={learning_rate:.2e} "
                     f"tokens/s={train_metric['tokens_per_second']:.0f}",
@@ -542,8 +581,9 @@ def run_training(
                 )
 
             if optimizer_step == max(1, planned_steps // 2):
-                export_model_weights(
-                    config.checkpoint_dir / f"weights_step_{optimizer_step}.pth",
+                weights_exporter(
+                    config.checkpoint_dir
+                    / f"{weights_prefix}_step_{optimizer_step}.pth",
                     model,
                 )
             if optimizer_step % config.checkpoint_interval == 0:
@@ -553,7 +593,7 @@ def run_training(
                     optimizer,
                     scaler,
                     training_state,
-                    config.to_dict(),
+                    runtime_config,
                     tokenizer_info,
                     compact_manifest(manifest),
                     history,
@@ -610,8 +650,8 @@ def run_training(
             "perplexity": existing_final["perplexity"],
             "tokens": existing_final["tokens"],
         }
-    export_model_weights(
-        config.checkpoint_dir / f"weights_step_{final_step}.pth",
+    weights_exporter(
+        config.checkpoint_dir / f"{weights_prefix}_step_{final_step}.pth",
         model,
     )
     save_checkpoint(
@@ -620,7 +660,7 @@ def run_training(
         optimizer,
         scaler,
         training_state,
-        config.to_dict(),
+        runtime_config,
         tokenizer_info,
         compact_manifest(manifest),
         history,
@@ -630,6 +670,11 @@ def run_training(
         "source_revision": MINIMIND_REVISION,
         "profile": config.profile,
         "parameter_count": sum(parameter.numel() for parameter in model.parameters()),
+        "trainable_parameter_count": sum(
+            parameter.numel()
+            for parameter in model.parameters()
+            if parameter.requires_grad
+        ),
         "device": str(device),
         "device_name": (
             torch.cuda.get_device_name(cuda_device_index(device))
@@ -654,6 +699,7 @@ def run_training(
         "initial_weights": (
             manifest.get("initial_weights") if initial_weights_path is not None else None
         ),
+        "model_setup": model_setup_info or None,
     }
     (config.output_dir / "summary.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=2) + "\n",

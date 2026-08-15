@@ -1,6 +1,6 @@
 # LLM 自学项目计划
 
-> *从语言模型的基本机制出发，循序完成预训练、监督微调、偏好优化与模型蒸馏，最终进入 Qwen 正式后训练。*
+> *从语言模型的基本机制出发，循序完成预训练、监督微调与模型蒸馏，最终进入 Qwen 正式后训练。*
 
 ---
 
@@ -20,7 +20,7 @@
 
 > **学习主线**
 >
-> 语言模型基本机制 → 最小训练循环 → MiniMind Pretrain → SFT → LoRA → DPO → Distillation → Qwen 正式后训练与回归评估 → 架构研究
+> 语言模型基本机制 → 最小训练循环 → MiniMind Pretrain → SFT → LoRA → Distillation → Qwen 正式后训练与回归评估 → 架构研究
 
 项目执行遵循以下原则：
 
@@ -33,30 +33,30 @@
 - 不安排大规模人工标注、逐条清洗或手工修正模型输出；
 - 教学阶段的极小样本直接取自官方数据子集；
 - Teacher 生成数据必须由公开 gold answer 或现成 verifier 自动筛选；
-- 无法解析、输出截断或重复的生成结果不进入派生数据；可解析但答案错误的候选可保留在原始结果中，并按后续阶段的确定性规则用于 DPO rejected；
+- 无法解析、输出截断或重复的生成结果不进入派生数据；可解析但答案错误的候选保留在原始结果中；
 - 人工操作限于少量只读抽查，用于发现流水线错误，不修改标签；
-- 正式 test 只用于评估，不进入 SFT、DPO、蒸馏数据生成或超参数选择。
+- 正式 test 只用于评估，不进入 SFT、蒸馏数据生成或超参数选择。
 - 正式模型在目标任务之外保留固定的通用回归评估，用于检查指令遵循、通用能力与真实性风险信号。
 
-学习者已具备 Python、PyTorch 和机器学习基础，因此本计划不再重复完整的神经网络基础课程；但在进度安排上，仍按缺少 LLM 完整训练链路经验的起点执行。MoE、GRPO、Tool Use、Qwen、QLoRA 和分布式训练等内容不得在项目初期同时引入。
+学习者已具备 Python、PyTorch 和机器学习基础，因此本计划不再重复完整的神经网络基础课程；但在进度安排上，仍按缺少 LLM 完整训练链路经验的起点执行。MoE、Tool Use、Qwen、QLoRA 和分布式训练等内容不得在项目初期同时引入。
 
 ### MiniMind 的定位与毕业条件
 
 MiniMind 在本计划中定位为一次完整的白盒训练项目，用于连接 TinyGPT 的最小实现与 Qwen 的真实后训练生态。它主要承担三项任务：
 
 - 阅读现代 Decoder-only 结构，理解 RoPE、GQA、RMSNorm、gated FFN、KV Cache 等组件；
-- 以较低成本跑通 Pretrain、SFT、LoRA、DPO 和 Distillation 的关键数据流与训练信号；
+- 以较低成本跑通 Pretrain、SFT、LoRA 和 Distillation 的关键数据流与训练信号；
 - 观察过拟合、loss mask、KL、输出长度、能力退化和 checkpoint 恢复等训练行为。
 
-MiniMind 实验能够支持对代码正确性、数据流、loss 计算和优化行为的判断。其任务效果容易受到模型容量限制，因此不直接用于证明某种后训练算法在真实 LLM 上更优，也不默认将 MiniMind 的学习率、batch size、LoRA rank、DPO beta 或蒸馏配置迁移至 Qwen。
+MiniMind 实验能够支持对代码正确性、数据流、loss 计算和优化行为的判断。其任务效果容易受到模型容量限制，因此不直接用于证明某种后训练算法在真实 LLM 上更优，也不默认将 MiniMind 的学习率、batch size、LoRA rank 或蒸馏配置迁移至 Qwen。
 
-完成阶段 3～8 的验收，并在阶段 9 固化必要的配置、记录和评估入口后，即视为完成 MiniMind 主线。生成质量不作为延迟进入 Qwen 的理由；模型已经暴露容量上限时，不继续通过增加数据、延长训练或扩大超参数搜索追求可用能力。
+完成阶段 3～6 与阶段 8 的验收，并在阶段 9 固化必要的配置、记录和评估入口后，即视为完成 MiniMind 主线。阶段 7 已延期到 `study/rl-system`，不作为 Core 主线的前置条件。生成质量不作为延迟进入 Qwen 的理由；模型已经暴露容量上限时，不继续通过增加数据、延长训练或扩大超参数搜索追求可用能力。
 
 此后重新使用 MiniMind 只限于快速复现训练故障。正式任务效果与算法收益由 Qwen 及后续规模验证提供证据；阶段 12 使用公开 GPT-2 checkpoint 与 OLMo 3 官方预设开展架构迁移和受控研究。
 
 ### MiniMind 固定评估基线
 
-MiniMind 阶段的客观评估直接采用 MiniMind 官方横评使用的 `lm-evaluation-harness` 七任务套件：`ceval-valid`、`cmmlu`、`arc_easy`、`piqa`、`openbookqa`、`hellaswag` 和 `social_iqa`。评测框架、task 配置及七个底层 Hugging Face Dataset revision 均按[模型与数据来源](./模型与数据来源.md)冻结。Pretrain checkpoint 按 Base 模型口径评估；SFT、LoRA 与 DPO checkpoint 使用同一任务配置并应用 MiniMind 官方 chat template。原生 PyTorch checkpoint 通过 MiniMind 官方 `scripts/convert_model.py` 转为 Transformers 格式后交给现成 `hf` backend，不编写任务、标签、prompt 模板或评分器。
+MiniMind 阶段的客观评估直接采用 MiniMind 官方横评使用的 `lm-evaluation-harness` 七任务套件：`ceval-valid`、`cmmlu`、`arc_easy`、`piqa`、`openbookqa`、`hellaswag` 和 `social_iqa`。评测框架、task 配置及七个底层 Hugging Face Dataset revision 均按[模型与数据来源](./模型与数据来源.md)冻结。Pretrain checkpoint 按 Base 模型口径评估；SFT 与 LoRA checkpoint 使用同一任务配置并应用 MiniMind 官方 chat template。原生 PyTorch checkpoint 通过 MiniMind 官方 `scripts/convert_model.py` 转为 Transformers 格式后交给现成 `hf` backend，不编写任务、标签、prompt 模板或评分器。
 
 这组结果只用于检查阶段间变化和明显能力退化。MiniMind 容量较小，接近随机水平的分数仍按原样记录，不通过增加训练、修改评测 prompt 或挑选题目追求榜单表现。
 
@@ -80,7 +80,7 @@ MiniMind 阶段的客观评估直接采用 MiniMind 官方横评使用的 `lm-ev
 
 阶段 10 可选旁路的 7～10.5 小时不计入第 4～6 周核心工期。机动时间不足时直接延后，未完成该旁路不影响阶段 10 验收或第 7 周蒸馏专题启动。阶段 12 按既定路线执行时，该旁路默认跳过；只有希望单独观察领域适应与通用能力回退时再启动。
 
-前两周以训练正确性为主要目标，不以模型生成质量为进度判断标准。第 3～4 周完成 MiniMind 的 SFT、LoRA、DPO、蒸馏和实验规范整理，并开始 Qwen 正式后训练；第 5～6 周完成 Qwen 核心项目。
+前两周以训练正确性为主要目标，不以模型生成质量为进度判断标准。第 3～4 周完成 MiniMind 的 SFT、LoRA、蒸馏和实验规范整理，并开始 Qwen 正式后训练；第 5～6 周完成 Qwen 核心项目。
 
 ### 阶段总览
 
@@ -91,14 +91,14 @@ MiniMind 阶段的客观评估直接采用 MiniMind 官方横评使用的 `lm-ev
 | 2 | 最小 Transformer | 1M～10M TinyGPT | 约 9 小时（实际 7 + 复习 2） | 第 1 周 |
 | 3 | 阅读现代模型结构 | 缩小版 MiniMind | 5～6.5 小时（实际主动投入 20 小时） | 第 2 周 |
 | 4 | 从头预训练 | MiniMind 64M | 13～17 小时（实际主动投入 4 小时） | 第 2 周 |
-| 5 | 监督微调 | MiniMind 64M | 13～17 小时 | 第 2～3 周 |
-| 6 | LoRA | MiniMind 64M | 5～6.5 小时 | 第 3 周 |
-| 7 | DPO | MiniMind 64M | 12～15.5 小时 | 第 3～4 周 |
-| 8 | 模型蒸馏 | Qwen3-4B / MiniMind Teacher → MiniMind Student | 8.5～12 小时 | 第 4 周 |
+| 5 | 监督微调 | MiniMind 64M | 13～17 小时（实际主动投入 6 小时） | 第 2～3 周 |
+| 6 | LoRA | MiniMind 64M | 5～6.5 小时（实际主动投入 7 小时） | 第 3 周 |
+| 7 | DPO 与 Online RL | 延期到 `study/rl-system` | 不计入主线 | TODO |
+| 8 | 模型蒸馏 | 本地 Qwen3.5-9B / MiniMind Teacher → MiniMind Student | 8.5～12 小时（实际主动投入 6.5 小时） | 第 4 周 |
 | 9 | 实验规范整理 | MiniMind | 5～6.5 小时 | 第 4 周 |
 | 10 | 正式后训练 | Qwen3 0.6B / 1.7B / 4B | 44～62.5 小时 | 第 4～6 周 |
 | 10（旁路） | 领域继续预训练（可选） | Qwen3 0.6B Base | 7～10.5 小时 | 有领域适应专项兴趣时 |
-| 11 | 可选 RL 后训练 | Qwen | 按实验确定 | 蒸馏专题完成后 |
+| 11 | RL 后训练 | 延期到 `study/rl-system` | 不计入主线 | TODO |
 | 12 | 架构迁移与受控研究 | GPT-2 Medium / OLMo 3 100M～370M | 193～255 小时 | 蒸馏后 6～7.5 个研究周 |
 
 ### 周进度安排
@@ -107,14 +107,14 @@ MiniMind 阶段的客观评估直接采用 MiniMind 官方横评使用的 `lm-ev
 | ---: | --- | --- |
 | 第 1 周 | 阶段 0～2 | 完成语言模型基础、最小训练循环和 TinyGPT，实现从 token 到 loss 的完整链路；时间允许时完成 BPE 拓展练习 |
 | 第 2 周 | 阶段 3～4，并启动阶段 5 | 理解 MiniMind Dense 结构，完成预训练流程和评估，开始 SFT |
-| 第 3 周 | 完成阶段 5，执行阶段 6～7 | 完成 SFT、LoRA 对照和 DPO，打通主要后训练方法 |
-| 第 4 周 | 完成阶段 7，执行阶段 8～9，启动阶段 10 | 完成 MiniMind 后训练方法与实验规范，开始 Qwen 环境和开发模型调试 |
-| 第 5～6 周 | 阶段 10 | 完成 Qwen 4B QLoRA SFT、完整评估、最小 DPO、回归检查和复现检查 |
-| 第 7～9 周 | 蒸馏专题主体 | 完成 Teacher 数据、1.7B 调试、4B 序列蒸馏和 DPO 蒸馏 |
+| 第 3 周 | 完成阶段 5，执行阶段 6 | 完成 SFT 与 LoRA 对照 |
+| 第 4 周 | 执行阶段 8～9，启动阶段 10 | 完成 MiniMind 蒸馏与实验规范，开始 Qwen 环境和开发模型调试 |
+| 第 5～6 周 | 阶段 10 | 完成 Qwen 4B QLoRA SFT、完整评估、回归检查和复现检查 |
+| 第 7～9 周 | 蒸馏专题主体 | 完成 Teacher 数据、1.7B 调试和 4B 序列蒸馏 |
 | 第 10 周前半 | 蒸馏专题结项 | 按条件执行 8B 验证，或记录停止理由并完成专题总结 |
-| 蒸馏后 6～7.5 个研究周 | 阶段 12 | 执行 GPT-2 checkpoint 迁移与 OLMo 3 GQA 受控研究；如先进行可选 RL，窗口顺延 |
+| 蒸馏后 6～7.5 个研究周 | 阶段 12 | 执行 GPT-2 checkpoint 迁移与 OLMo 3 GQA 受控研究 |
 
-不执行可选 GRPO 时，完整主线预计在第 16～18 周结束。蒸馏专题提前结束时，阶段 12 可以直接进入 R1，不等待预设日历周。
+完整主线预计在第 16～18 周结束。RL 系统学习从 TODO 独立启动，不改变主线结束时间。蒸馏专题提前结束时，阶段 12 可以直接进入 R1，不等待预设日历周。
 
 周次是进度基线，不替代阶段验收标准。某阶段未达到验收标准时，应优先使用后续周次中的机动时间补齐，不因日历周结束而直接进入下一阶段。
 
@@ -514,6 +514,8 @@ MiniMind 的预训练脚本包括 mixed precision、gradient accumulation、grad
 
 > **预计总投入**　13～17 小时，其中首次学习 10～13 小时，第三天复习 3～4 小时
 >
+> **时间记录**　实际主动学习 6 小时；正式训练、生成和评估的运行时间不计入学习时长
+>
 > **阶段目标**　在理解预训练的基础上，掌握对话数据构造、response mask 和完整 SFT 流程。
 
 #### 5.1　原理范围
@@ -592,6 +594,8 @@ label
 
 > **预计总投入**　5～6.5 小时，其中首次学习 4～5 小时，第三天复习 1～1.5 小时
 >
+> **时间记录**　实际主动学习 7 小时；正式训练、生成和评估的运行时间不计入学习时长
+>
 > **阶段目标**　在完成 Full SFT 后，理解 LoRA 对全参数微调的替代方式，并完成可控对照实验。
 
 LoRA 安排在 Full SFT 之后执行，以便明确它所替代的训练过程。MiniMind 自行实现了 LoRA 注入、参数冻结和 LoRA 权重保存，没有完全依赖 PEFT。
@@ -649,109 +653,11 @@ Full SFT 与 LoRA 使用相同的：
 
 ### 阶段 7　DPO
 
-> **预计总投入**　12～15.5 小时，其中首次学习 9～12 小时，第三天复习 3～3.5 小时
->
-> **阶段目标**　掌握第一个 preference optimization 流程，并建立 SFT、Reward Model、PPO、DPO、GRPO 和蒸馏在后训练体系中的位置感。本阶段只实际训练 DPO，不同时实现 PPO 或 GRPO。
+本阶段已从 Core 主线延期。MiniMind DPO 的现有实现、训练结果和 Notebook 保留在
+`study/rl-system` 分支，并作为独立 RL 系统学习的 offline preference baseline。
 
-#### 7.1　后训练算法定位
-
-先建立算法全景：
-
-```text
-Base Model → SFT
-                 ├→ preference pairs → DPO（offline）
-                 ├→ preference pairs → Reward Model → PPO（online）
-                 └→ verifier / reward → GRPO（online）
-
-Teacher Model / Checkpoint → Distillation → Student Model
-```
-
-完成以下概念对照：
-
-| 方法 | 主要训练信号 | 数据产生方式 | 本项目要求 |
-| --- | --- | --- | --- |
-| SFT | 标准答案 token | 离线示范数据 | 实际训练 |
-| Reward Model | chosen / rejected 偏好 | 离线偏好数据 | 理解输入、输出与用途 |
-| PPO | Reward Model 或规则奖励 | 在线采样回答 | 理解 rollout、reward、reference 和 policy update |
-| DPO | chosen / rejected 偏好 | 离线偏好数据 | 实际训练 |
-| GRPO | 一组采样回答的相对奖励 | 在线采样回答 | 可选实际训练 |
-| Distillation | Teacher response 或 logits | Teacher 生成或前向计算 | 实际训练 |
-
-本阶段不实现 Reward Model 和 PPO，但需要理解：
-
-- offline preference optimization 与 online RL 的区别；
-- Reward Model 在经典 RLHF 流程中的位置；
-- PPO 为什么需要 rollout、reward、reference model 和 policy update；
-- DPO 为什么可以绕过单独训练 Reward Model；
-- GRPO 与 DPO 的训练数据产生方式为何不同；
-- 蒸馏为什么不属于 preference optimization。
-
-#### 7.2　数据与原理
-
-每个样本包含：
-
-```text
-prompt
-chosen response
-rejected response
-```
-
-模型需要提高：
-
-$$
-\log \pi(y_{\text{chosen}}\mid x)
--
-\log \pi(y_{\text{rejected}}\mid x)
-$$
-
-同时避免无限偏离 reference model。
-
-MiniMind 的 DPO 实现会直接计算 policy model 和 reference model 对 chosen、rejected 的 sequence log-probability。
-
-#### 7.3　任务一：读取极小 Preference 子集
-
-从固定 revision 的 MiniMind 官方 `dpo.jsonl` 以 seed `42` 打乱后取前 64 条 chosen / rejected 样本，保存 Dataset fingerprint 与原始 row ID，并检查字段、模板、长度和 loss mask。该阶段直接复用公开偏好标签，不编写新的 preference pairs，也不按主观判断人工挑选样本。
-
-#### 7.4　任务二：记录中间量
-
-打印并记录：
-
-- chosen policy log-probability；
-- rejected policy log-probability；
-- policy margin；
-- reference margin；
-- DPO logits；
-- DPO loss。
-
-#### 7.5　任务三：增加评估
-
-除 DPO loss 外，增加：
-
-- preference accuracy；
-- chosen win rate；
-- response length；
-- KL divergence；
-- MiniMind 七任务客观基线。
-
-#### 7.6　阶段交付物
-
-- 一页后训练算法全景与对照笔记
-- 固定的 MiniMind preference 子集与检查记录
-- DPO 中间量记录
-- preference accuracy、chosen win rate、response length 和 KL divergence 评估
-- DPO 前后的 MiniMind 七任务结果对比
-
-#### 7.7　验收标准
-
-能够说明：
-
-- SFT、Reward Model、PPO、DPO、GRPO 和蒸馏分别使用什么训练信号；
-- offline preference optimization 与 online RL 的区别；
-- policy model 与 reference model 的区别；
-- $\beta$ 的作用；
-- DPO 可能使输出变长的原因；
-- preference 数据质量比 loss 下降更重要的原因；
-- DPO 造成能力退化的可能原因。
+后续 Reward Model、PPO、GRPO 与一种 Online RL 变体也在该分支完成。任务入口记录在
+[`TODO.md`](./TODO.md)，本阶段不参与 Core 3 的时间预算与验收。
 
 ---
 
@@ -759,15 +665,17 @@ MiniMind 的 DPO 实现会直接计算 policy model 和 reference model 对 chos
 
 > **预计总投入**　8.5～12 小时，其中首次学习 6.5～9 小时，第三天复习 2～3 小时
 >
+> **时间记录**　实际主动学习 6.5 小时；Teacher 生成与训练运行时间不计入学习时长
+>
 > **阶段目标**　在已掌握监督数据和概率分布的基础上，完成 logit distillation 对照，并用极小样本体验 sequence-level distillation 的数据流。
 
 #### 8.1　实现基线与工作边界
 
 本阶段直接复用 MiniMind 官方蒸馏脚本提供的 Teacher / Student 加载、CE + KL、temperature、checkpoint resume 和分布式训练能力。学习重点放在训练信号、关键中间量与对照实验，不重新搭建蒸馏训练基础设施。
 
-Sequence-level Distillation 固定使用 `openai/gsm8k` 的 `main` 配置。阶段 8 开始时生成项目级 `gsm8k_split_v1.json`：为官方 train 添加原始 row ID，以 seed `42` 打乱一次，前 500 条作为 development，其余 6,973 条作为正式训练区，并将正式训练区前 100 条记录为 `smoke_100`。本阶段读取这 100 个固定 row ID；阶段 10、蒸馏专题和可选 GRPO 只读复用同一清单，不重新抽样。`question` 作为 prompt，官方 `answer` 作为自动验证依据。
+Sequence-level Distillation 固定使用 `openai/gsm8k` 的 `main` 配置。阶段 8 开始时生成项目级 `gsm8k_split_v1.json`：为官方 train 添加原始 row ID，以 seed `42` 打乱一次，前 500 条作为 development，其余 6,973 条作为正式训练区，并将正式训练区前 100 条记录为 `smoke_100`。本阶段读取这 100 个固定 row ID；阶段 10、蒸馏专题和独立 RL 专题只读复用同一清单，不重新抽样。`question` 作为 prompt，官方 `answer` 作为自动验证依据。
 
-Teacher 固定使用已完成后训练的 `Qwen/Qwen3-4B`，批量生成 reasoning 与 final answer，再由 Math-Verify 对照 GSM8K gold answer 自动验证。只有验证通过的 Teacher response 进入 MiniMind SFT 数据；其余结果只保留自动状态，不进行人工改写、补标或筛选。
+Teacher 固定使用本地 `Qwen3.5-9B-Q4_K_M.gguf`，通过 LM Studio 的 OpenAI-compatible API 批量生成 reasoning 与 final answer。GSM8K 是纯文本任务，不加载该模型的 `mmproj` 文件。Math-Verify 对照 GSM8K gold answer 自动验证；只有验证通过的 Teacher response 进入 MiniMind SFT 数据，其余结果保留自动状态。本地绝对路径不写入仓库。
 
 该任务只验收“公开 prompt → Teacher response → 自动验证 → MiniMind Student SFT”的数据流，不形成正式蒸馏结论，也不扩大数据量或训练矩阵。
 
@@ -785,7 +693,7 @@ prompt → teacher response
 
 #### 8.3　任务二：Logit Distillation
 
-MiniMind 已实现：
+本阶段实现 Forward KL 与 Reverse KL。Forward KL 的训练目标为：
 
 $$
 L =
@@ -794,6 +702,17 @@ L =
 (1-\alpha)T^2
 D_{\mathrm{KL}}\left(p_T^{(T)} \Vert p_S^{(T)}\right)
 $$
+
+Reverse KL 交换两个分布的位置：
+
+$$
+L =
+T^2 D_{\mathrm{KL}}\left(p_S^{(T)} \Vert p_T^{(T)}\right)
+$$
+
+Forward KL 倾向于覆盖 Teacher 分布中概率较高的区域；Reverse KL 倾向于把 Student
+概率集中到 Teacher 的高概率区域。两者使用相同的 response mask、temperature、Teacher、
+Student 和数据。
 
 推荐配置：
 
@@ -809,9 +728,10 @@ $$
 比较：
 
 1. 纯 CE；
-2. 纯 KD；
-3. CE + KD；
-4. 在 CE + KD 上增加一个 temperature 对照。
+2. 纯 Forward KD；
+3. 纯 Reverse KD；
+4. CE + Forward KD；
+5. 在 CE + Forward KD 上增加一个 temperature 对照。
 
 Teacher / Student size ratio 只记录当前配置与观察，不在本阶段扩展为完整网格。
 
@@ -819,7 +739,7 @@ Teacher / Student size ratio 只记录当前配置与观察，不在本阶段扩
 
 - `gsm8k_split_v1.json` 及固定 100 条 prompts 的生成、自动验证与 sequence-level distillation 链路记录
 - logit distillation 训练结果
-- CE、KD、CE + KD 对照记录
+- CE、Forward KD、Reverse KD、CE + Forward KD 对照记录
 - 一个 temperature 对照记录
 - MiniMind 官方蒸馏脚本的关键调用链与配置说明
 
@@ -828,6 +748,7 @@ Teacher / Student size ratio 只记录当前配置与观察，不在本阶段扩
 能够说明：
 
 - response distillation 与 logit distillation 的区别；
+- Forward KL 与 Reverse KL 的分布顺序和训练倾向；
 - temperature 的作用；
 - 不同 tokenizer 难以直接执行 token-level KD 的原因；
 - teacher 错误传递给 student 的方式；
@@ -910,7 +831,7 @@ MiniMind 沿用官方 checkpoint / resume 实现；Qwen 使用 Transformers Trai
 
 > **预计总投入**　44～62.5 小时，其中首次学习与执行 34～48 小时，第三天复习 10～14.5 小时
 >
-> **阶段目标**　将 MiniMind 阶段建立的底层理解迁移至真实大模型训练生态，完成 Qwen SFT 正式项目、训练前后回归评估和一次低成本 DPO 框架验证。
+> **阶段目标**　将 MiniMind 阶段建立的底层理解迁移至真实大模型训练生态，完成 Qwen SFT 正式项目与训练前后回归评估。
 
 本阶段开始使用租用的 RTX 5090 32GB。
 
@@ -956,22 +877,21 @@ MiniMind 阶段用于理解底层实现，Qwen 阶段用于掌握真实生产生
 - **Datasets**：加载数据、划分 train/validation，并以一次确定性的 `Dataset.map` 转换为 TRL 标准数据格式；
 - **PEFT**：注入 LoRA，打印可训练参数，完成 adapter 的保存、重新加载与合并；
 - **bitsandbytes**：以 4-bit 方式加载基础模型，确认量化参数与 LoRA 可训练参数的区别，并跑通一次 QLoRA；
-- **TRL**：使用 `SFTTrainer` 和 `DPOTrainer` 分别跑通一次 SFT 和 DPO，并使用 TRL CLI YAML 保存训练配置；
+- **TRL**：使用 `SFTTrainer` 跑通一次 SFT，并使用 TRL CLI YAML 保存训练配置；
 - **Accelerate**：通过统一启动配置运行一次训练，使用原生 tracker 记录指标，并从 checkpoint 恢复；
 - **FlashAttention / SDPA**：选择与当前硬件和模型兼容的 attention backend，确认能够稳定完成训练并记录实际 backend；
 - **vLLM 或 SGLang**：任选其一加载训练结果，使用固定 generation config 完成批量生成。
 
 本阶段不要求阅读所有框架源码或掌握全部 API。验收重点是能够说明每个框架负责哪一段流程、接收什么输入、产生什么输出，以及 checkpoint、adapter 和数据如何在框架之间流转。
 
-Qwen 阶段直接采用 TRL 支持的 prompt-completion 或 conversational 数据格式，由训练器应用 chat template 和 completion mask。数据适配层只负责字段映射、类型检查和少量批次抽查，不手写完整模板管线，也不维护第二套 SFT / DPO collator。LoRA / QLoRA 使用 PEFT，checkpoint 与日志使用 Transformers / Accelerate 原生能力。
+Qwen 阶段直接采用 TRL 支持的 prompt-completion 或 conversational 数据格式，由训练器应用 chat template 和 completion mask。数据适配层只负责字段映射、类型检查和少量批次抽查，不手写完整模板管线，也不维护第二套 SFT collator。LoRA / QLoRA 使用 PEFT，checkpoint 与日志使用 Transformers / Accelerate 原生能力。
 
 #### 10.4　项目执行顺序
 
 1. 使用固定数据、generation config 和评估任务建立 Qwen Base baseline；
 2. 使用主流框架完成 QLoRA SFT；
 3. 完成目标任务与通用回归评估；
-4. 在公开 preference baseline 上完成一次最小 DPO 流程；
-5. 重新加载 SFT checkpoint，完成固定 development 评估和一段短 resume 检查，再整理蒸馏专题可直接复用的资产；不执行第二次完整 4B SFT。
+4. 重新加载 SFT checkpoint，完成固定 development 评估和一段短 resume 检查，再整理蒸馏专题可直接复用的资产；不执行第二次完整 4B SFT。
 
 #### 10.5　固定任务与数据基线
 
@@ -989,7 +909,7 @@ Qwen 阶段直接采用 TRL 支持的 prompt-completion 或 conversational 数�
 
 额外使用 `HuggingFaceH4/MATH-500` 的 500 条题目进行高难度泛化评估。MATH-500 不参与训练、Teacher 数据生成和超参数选择。
 
-该配置用于 Qwen SFT、后续蒸馏专题及可选 GRPO。阶段 10 不重新生成 split，只读取并校验阶段 8 的项目级清单。训练数据转换采用可复现的程序化薄适配，只处理字段映射和格式校验；chat template 与 completion mask 交由 TRL 处理，不修改公开标签。
+该配置用于 Qwen SFT、后续蒸馏专题及独立 RL 专题。阶段 10 不重新生成 split，只读取并校验阶段 8 的项目级清单。训练数据转换采用可复现的程序化薄适配，只处理字段映射和格式校验；chat template 与 completion mask 交由 TRL 处理，不修改公开标签。
 
 #### 10.6　通用回归评估基线
 
@@ -1008,27 +928,11 @@ Qwen 阶段直接采用 TRL 支持的 prompt-completion 或 conversational 数�
 1. Qwen3-4B Base；
 2. 普通 GSM8K QLoRA SFT；
 3. 蒸馏专题选出的唯一胜出 SFT；
-4. 最终 Verifier-filtered DPO；
-5. 条件式 8B 验证中实际进入结论表的 checkpoint。
+4. 条件式 8B 验证中实际进入结论表的 checkpoint。
 
 阶段 10 只产生前两项结果，其余结果由蒸馏专题继承同一配置按条件补齐。开发模型、失败运行和未入选的中间 adapter 不重复执行完整集合。IFEval、MMLU 和 TruthfulQA 全程只读，不用于选择 checkpoint、调整超参数或生成训练数据；单项 benchmark 结果只作为回归信号，不形成完整安全能力结论。
 
-#### 10.7　DPO 框架验证基线
-
-DPO 只用于熟悉 TRL preference 数据流，不在本阶段构造 GSM8K preference pairs。固定使用 TRL 官方示例采用的公开 `trl-lib/ultrafeedback_binarized`，从 train split 以 seed `42` 打乱后抽取 1,000 条，在官方示例模型 `Qwen/Qwen3-0.6B` 上完成一次短训练。
-
-本任务只验收：
-
-- `prompt / chosen / rejected` 字段流转；
-- policy 与 reference model 的加载；
-- DPO loss、preference accuracy 和长度变化；
-- adapter 保存、加载和独立评估。
-
-该结果不用于推断 GSM8K 能力，也不进入后续蒸馏专题的数学偏好对照。正式数学 preference pairs 统一由蒸馏专题中的 Teacher 候选和 Math-Verify 自动产生。
-
-该短流程与 4B 正式任务使用不同模型和数据，只验收 DPO 框架数据流，不额外运行通用回归集合。
-
-#### 10.8　gpt-oss-20b 的定位
+#### 10.7　gpt-oss-20b 的定位
 
 gpt-oss-20b 定位为后续蒸馏专题的固定 Teacher。主计划只确认模型来源、Harmony 格式和推理入口，不在阶段 10 生成正式 Teacher 数据。完成 Qwen 项目后，将其用于：
 
@@ -1038,7 +942,7 @@ gpt-oss-20b 定位为后续蒸馏专题的固定 Teacher。主计划只确认模
 
 不将 gpt-oss-20b 作为第一个正式训练模型。
 
-#### 10.9　领域继续预训练旁路（可选）
+#### 10.8　领域继续预训练旁路（可选）
 
 > **预计总投入**　7～10.5 小时，其中首次学习与执行 5.5～8 小时，第三天复习 1.5～2.5 小时
 >
@@ -1057,7 +961,7 @@ gpt-oss-20b 定位为后续蒸馏专题的固定 Teacher。主计划只确认模
 
 最小交付物包括一份训练 YAML、一条 validation loss 曲线，以及一张 Base / CPT 的领域 loss、数学能力和通用回归对照表。一次对照足以完成本阶段，不因效果有限而扩大数据量或追加 SFT 矩阵。
 
-#### 10.10　阶段交付物
+#### 10.9　阶段交付物
 
 - 固定 revision 与 split 的 GSM8K 数据基线
 - GSM8K 到 TRL 标准格式的确定性薄适配脚本
@@ -1067,10 +971,9 @@ gpt-oss-20b 定位为后续蒸馏专题的固定 Teacher。主计划只确认模
 - 使用 vLLM 或 SGLang 完成的固定参数批量生成结果
 - LightEval 的 GSM8K、MATH-500 与三项通用回归评估结果
 - QLoRA SFT checkpoint 与完整评估结果
-- 公开 preference baseline 上的最小 DPO 流程记录
 - 可供蒸馏专题直接继承的数据 split、SFT baseline、评估配置和 checkpoint 索引
 
-#### 10.11　验收标准
+#### 10.10　验收标准
 
 - GSM8K train、development、test 和 MATH-500 的用途边界清晰；
 - 正式项目未引入人工标注或逐条数据修正；
@@ -1079,66 +982,17 @@ gpt-oss-20b 定位为后续蒸馏专题的固定 Teacher。主计划只确认模
 - 开发模型能够稳定完成数据、模板和训练配置调试；
 - 4B QLoRA SFT 已完成独立评估、checkpoint 重载和短 resume 复现检查，未重复执行完整训练；
 - Qwen3-4B Base 与普通 QLoRA SFT 已按同一冻结配置完成通用回归评估；
-- 能够用公开 preference 数据说明 TRL DPO 的完整输入输出；
 - 未在主计划中提前构造正式 Teacher 数据或数学 preference pairs；
 - 蒸馏专题可以直接读取本阶段的数据 split、baseline 和评估配置。
 
 ---
 
-### 阶段 11　GRPO 或 RL 后训练（可选）
+### 阶段 11　RL 系统学习
 
-> **阶段性质**　可选阶段，不属于基础阶段。
->
-> **阶段目标**　仅在训练和评估基础设施成熟后，基于成熟 baseline 对可验证任务开展一次最小 GRPO 实验。
+本阶段已从主计划延期到 `study/rl-system`。DPO、Reward Model、PPO、GRPO 和后续选定的一种
+Online RL 变体统一在该分支学习，不参与 Core、Distillation 或 Architecture 的验收与工期。
 
-#### 11.1　启动条件
-
-仅当以下条件全部满足时进入本阶段：
-
-- SFT 稳定；
-- DPO 稳定；
-- 已用 Math-Verify 跑通自动验证；
-- evaluation 可靠；
-- 能够区分 reward 与真实性能；
-- 能够监测 KL、长度和 reward hacking。
-
-#### 11.2　任务范围
-
-继续使用冻结的 GSM8K train prompts 与 gold answers，reward 由 Math-Verify 自动产生。正式 test 和 MATH-500 保持只读评估用途。
-
-初始化模型固定采用数学任务 checkpoint：默认使用阶段 10 的 `Qwen/Qwen3-4B-Base` GSM8K QLoRA SFT 结果；若蒸馏专题 D5 已完成，也可以改用其 4B Verifier-filtered DPO 结果。两者只选一个并在运行前冻结。阶段 10 的 `Qwen/Qwen3-0.6B` UltraFeedback DPO adapter 只用于框架验证，不纳入本阶段的初始化范围。
-
-实现基线固定为 TRL `GRPOTrainer` 与 Hugging Face Open R1 的数学奖励配方。训练器负责 rollout、组内相对优势、policy update、指标记录及 vLLM 接入；奖励函数复用 Open R1 对 Math-Verify 的调用方式。本阶段不自行开发 rollout 调度器、分布式同步、推理服务连接或另一套 GRPO 训练循环。
-
-基础主线（阶段 0～10）只要求理解 PPO 和 GRPO 在算法体系中的位置，不要求实际训练。进入本可选阶段后，优先只选择 GRPO，按以下最小流程完成一次实验：
-
-```text
-prompt
-→ policy 采样一组 responses
-→ verifier / reward function 打分
-→ 计算组内相对优势
-→ policy update
-→ 独立 evaluation
-```
-
-至少打印并检查一组 responses、对应 rewards、相对优势、KL 和训练 loss。允许为理解算法读取 TRL / Open R1 的关键实现并打印中间量，不复制整套训练基础设施。暂不同时学习 PPO、CISPO 和 Agentic RL，避免一次引入多套 rollout、reward、reference、sampling、policy update 和环境变量。
-
-自进化和 RSI 不纳入本项目路线。
-
-#### 11.3　阶段交付物
-
-- 一份 TRL GRPO YAML 配置与 Open R1 reward 适配记录
-- Math-Verify 自动验证测试结果
-- 一组 rollout responses、rewards、相对优势、KL 和 loss 的检查记录
-- reward、KL、输出长度和 reward hacking 监测记录
-- RL 前后真实性能对比
-
-#### 11.4　验收标准
-
-- 训练任务具有可靠的自动验证机制；
-- 能够说明 rollout、reward、相对优势和 policy update 的数据流；
-- reward 提升能够与真实任务性能提升区分；
-- KL、输出长度和 reward hacking 均处于可监测状态。
+独立专题的启动入口记录在 [`TODO.md`](./TODO.md)。
 
 ---
 
@@ -1216,17 +1070,15 @@ QK-Norm、FFN、MoE、位置编码和长上下文训练均保留为结项后的�
 - 能够完成从头预训练并恢复 checkpoint；
 - 能够正确构造 SFT 数据与 response mask。
 
-### 里程碑三　后训练方法验证
+### 里程碑三　MiniMind 后训练与蒸馏
 
-> **覆盖阶段**　6～8
+> **覆盖阶段**　6、8
 >
 > **目标完成时间**　第 4 周前半
 
 #### 完成标志
 
 - 完成 Full SFT 与 LoRA 对照；
-- 能够说明 SFT、Reward Model、PPO、DPO、GRPO 和蒸馏在后训练体系中的位置；
-- 完成 DPO preference optimization；
 - 完成 sequence-level 和 logit distillation 实验。
 
 ### 里程碑四　实验规范固化
@@ -1252,17 +1104,15 @@ QK-Norm、FFN、MoE、位置编码和长上下文训练均保留为结项后的�
 - 跑通 Transformers、Datasets、PEFT、TRL、Accelerate 和量化训练的最小框架流程；
 - 完成 4B QLoRA SFT、完整评估，以及 checkpoint 重载和短 resume 复现检查；
 - 完成 Base 与 SFT 的指令遵循、通用能力和真实性风险回归检查；
-- 使用公开 preference baseline 完成最小 DPO 框架验证；
 - 使用固定 generation config 完成批量生成与结果对比；
 - 已归档蒸馏专题可直接复用的数据 split、配置、baseline 和 checkpoint 索引。
 
 ### 里程碑六　最终研究阶段
 
-> **覆盖阶段**　可选阶段 11、最终阶段 12
+> **覆盖阶段**　12
 >
 > **目标开始时间**　蒸馏专题完成后
 
 #### 完成标志
 
-- 按 [模型架构迁移与研究学习计划](./架构迁移与研究计划.md) 完成 GPT-2 迁移与 OLMo 3 GQA 受控研究；
-- 若选择阶段 11，已在进入阶段 12 前完成一次具备 verifier 的可控 GRPO 实验。
+- 按 [模型架构迁移与研究学习计划](./架构迁移与研究计划.md) 完成 GPT-2 迁移与 OLMo 3 GQA 受控研究。

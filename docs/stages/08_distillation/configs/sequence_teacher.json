@@ -1,0 +1,20 @@
+{
+  "dataset_id": "openai/gsm8k",
+  "dataset_config": "main",
+  "dataset_split": "train",
+  "dataset_revision": "740312a",
+  "seed": 42,
+  "development_rows": 500,
+  "teaching_rows": 100,
+  "api_base": "http://localhost:1234/v1",
+  "model_name_contains": "qwen3.5-9b",
+  "temperature": 0.6,
+  "top_k": 20,
+  "top_p": 0.95,
+  "presence_penalty": 1.5,
+  "max_tokens": 2048,
+  "request_timeout_seconds": 300,
+  "split_manifest_path": "docs/stages/08_distillation/configs/gsm8k_split_v1.json",
+  "raw_output_path": "outputs/minimind/stage8/sequence/teacher_generations.jsonl",
+  "verified_sft_path": "data/minimind/gsm8k_teacher_verified.jsonl"
+}
