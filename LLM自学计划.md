@@ -52,7 +52,7 @@ MiniMind 实验能够支持对代码正确性、数据流、loss 计算和优化
 
 完成阶段 3～6 与阶段 8 的验收，并在阶段 9 固化必要的配置、记录和评估入口后，即视为完成 MiniMind 主线。阶段 7 已延期到 `study/rl-system`，不作为 Core 主线的前置条件。生成质量不作为延迟进入 Qwen 的理由；模型已经暴露容量上限时，不继续通过增加数据、延长训练或扩大超参数搜索追求可用能力。
 
-此后重新使用 MiniMind 只限于快速复现训练故障。正式任务效果与算法收益由 Qwen 及后续规模验证提供证据；阶段 12 使用公开 GPT-2 checkpoint 与 OLMo 3 官方预设开展架构迁移和受控研究。
+此后重新使用 MiniMind 只限于快速复现训练故障。正式任务效果与算法收益由 Qwen 及后续规模验证提供证据；阶段 12 的具体架构研究对象在阶段 11 后重新冻结。
 
 ### MiniMind 固定评估基线
 
@@ -72,7 +72,7 @@ MiniMind 阶段的客观评估直接采用 MiniMind 官方横评使用的 `lm-ev
 | 进入 Qwen 正式后训练 | 第 4 周后半开始 |
 | 完成 Qwen 正式后训练核心项目 | 预计累计 6 周 |
 | 前期硬件 | RTX 4060 8GB |
-| Qwen 正式后训练阶段硬件 | 计划租用 RTX 5090 32GB |
+| Qwen 正式后训练阶段硬件 | 默认 RTX 5090 32GB；实际显存超过 32GB 的实验使用 48GB GPU |
 
 以上时间按每周 35 小时的有效学习与实践投入估算，不包含数据下载、模型训练等无需持续操作的等待时间。每天完成新内容后，在第三天（学习日记为 D 时的 D+2）安排约为首次学习时间 30% 的复习；复习时间已经计入各阶段总投入和每周 35 小时，不在计划外追加。复习以脱离笔记解释、重画关键数据流和重新运行一个关键实验为主。
 
@@ -96,10 +96,10 @@ MiniMind 阶段的客观评估直接采用 MiniMind 官方横评使用的 `lm-ev
 | 7 | DPO 与 Online RL | 延期到 `study/rl-system` | 不计入主线 | TODO |
 | 8 | 模型蒸馏 | 本地 Qwen3.5-9B / MiniMind Teacher → MiniMind Student | 8.5～12 小时（实际主动投入 6.5 小时） | 第 4 周 |
 | 9 | 实验规范整理 | MiniMind | 5～6.5 小时 | 第 4 周 |
-| 10 | 正式后训练 | Qwen3 0.6B / 1.7B / 4B | 44～62.5 小时 | 第 4～6 周 |
-| 10（旁路） | 领域继续预训练（可选） | Qwen3 0.6B Base | 7～10.5 小时 | 有领域适应专项兴趣时 |
-| 11 | RL 后训练 | 延期到 `study/rl-system` | 不计入主线 | TODO |
-| 12 | 架构迁移与受控研究 | GPT-2 Medium / OLMo 3 100M～370M | 193～255 小时 | 蒸馏后 6～7.5 个研究周 |
+| 10 | 正式后训练 | Qwen3.5 hybrid architecture audit；2B / 9B QLoRA；35B-A3B MoE capacity run | 46～66.5 小时 | 第 4～6 周 |
+| 10（旁路） | 领域继续预训练（可选） | Qwen3.5 2B Base | 7～10.5 小时 | 有领域适应专项兴趣时 |
+| 11 | RL 系统学习 | `study/rl-system` | 专题启动前冻结预算 | 蒸馏专题后 |
+| 12 | 架构迁移与受控研究 | 题目在阶段 11 后重新冻结 | 执行前重估 | RL 专题后 |
 
 ### 周进度安排
 
@@ -109,12 +109,13 @@ MiniMind 阶段的客观评估直接采用 MiniMind 官方横评使用的 `lm-ev
 | 第 2 周 | 阶段 3～4，并启动阶段 5 | 理解 MiniMind Dense 结构，完成预训练流程和评估，开始 SFT |
 | 第 3 周 | 完成阶段 5，执行阶段 6 | 完成 SFT 与 LoRA 对照 |
 | 第 4 周 | 执行阶段 8～9，启动阶段 10 | 完成 MiniMind 蒸馏与实验规范，开始 Qwen 环境和开发模型调试 |
-| 第 5～6 周 | 阶段 10 | 完成 Qwen 4B QLoRA SFT、完整评估、回归检查和复现检查 |
-| 第 7～9 周 | 蒸馏专题主体 | 完成 Teacher 数据、1.7B 调试和 4B 序列蒸馏 |
-| 第 10 周前半 | 蒸馏专题结项 | 按条件执行 8B 验证，或记录停止理由并完成专题总结 |
-| 蒸馏后 6～7.5 个研究周 | 阶段 12 | 执行 GPT-2 checkpoint 迁移与 OLMo 3 GQA 受控研究 |
+| 第 5～6 周 | 阶段 10 | 完成 Qwen3.5 9B QLoRA SFT、完整评估、回归检查和复现检查 |
+| 第 7～9 周 | 蒸馏专题主体 | 完成 Teacher 数据、2B 调试和 9B 序列蒸馏 |
+| 第 10 周前半 | 蒸馏专题结项 | 完成胜出方案的固定评估与专题总结 |
+| 蒸馏专题后 | 阶段 11 | 完成 DPO、Reward Model、PPO、GRPO 与一种 Online RL 变体的独立专题 |
+| RL 专题后 | 阶段 12 | 根据当时的 efficient-attention 进展冻结研究问题，再执行架构研究 |
 
-完整主线预计在第 16～18 周结束。RL 系统学习从 TODO 独立启动，不改变主线结束时间。蒸馏专题提前结束时，阶段 12 可以直接进入 R1，不等待预设日历周。
+阶段 11 与阶段 12 的预算在各自启动前冻结，因此不再预先给出完整主线的结束周。蒸馏专题提前结束时，直接进入阶段 11；阶段 12 只在 RL 专题结项后启动。
 
 周次是进度基线，不替代阶段验收标准。某阶段未达到验收标准时，应优先使用后续周次中的机动时间补齐，不因日历周结束而直接进入下一阶段。
 
@@ -829,20 +830,19 @@ MiniMind 沿用官方 checkpoint / resume 实现；Qwen 使用 Transformers Trai
 
 ### 阶段 10　Qwen 正式后训练
 
-> **预计总投入**　44～62.5 小时，其中首次学习与执行 34～48 小时，第三天复习 10～14.5 小时
+> **预计总投入**　46～66.5 小时，其中首次学习与执行 36～52 小时，第三天复习 10～14.5 小时
 >
 > **阶段目标**　将 MiniMind 阶段建立的底层理解迁移至真实大模型训练生态，完成 Qwen SFT 正式项目与训练前后回归评估。
 
-本阶段开始使用租用的 RTX 5090 32GB。
+本阶段默认使用租用的 RTX 5090 32GB；实际显存超过 32GB 的实验使用 48GB GPU。
 
 #### 10.1　模型安排
 
 ##### 开发模型
 
-优先使用：
+使用：
 
-- `Qwen/Qwen3-0.6B-Base`；
-- `Qwen/Qwen3-1.7B-Base`。
+- `Qwen/Qwen3.5-2B-Base`。
 
 开发模型用于快速调试数据、chat template 和训练配置。
 
@@ -850,11 +850,33 @@ MiniMind 沿用官方 checkpoint / resume 实现；Qwen 使用 Transformers Trai
 
 使用：
 
-- `Qwen/Qwen3-4B-Base`。
+- `Qwen/Qwen3.5-9B-Base`。
 
-8B 与更大规模 Student 留给后续蒸馏专题按条件验证。主计划不通过扩大模型规模重复相同训练流程。
+9B 在单卡 32GB GPU 上以 QLoRA 训练，作为后续蒸馏专题的统一 Student 基线。开发模型只用于
+流程调试，不进入正式结果表。
 
-#### 10.2　工具栈
+##### MoE capacity run
+
+使用 `Qwen/Qwen3.5-35B-A3B-Base` 完成一次固定的短 QLoRA capacity run。该运行记录 total
+parameters、active parameters、trainable parameters、peak VRAM 与 tokens/s，用于理解 MoE 的
+实际资源边界；不重复 9B 的完整 SFT、LightEval 或超参数搜索。
+
+#### 10.2　Qwen3.5 hybrid architecture audit
+
+> **预计投入**　2～4 小时，计入本阶段总投入
+
+在开始 QLoRA 前，用官方模型配置、Transformers 实现和一次短运行审计 Qwen3.5 的实际结构；不实现
+Gated DeltaNet，也不把审计扩展为新的训练实验。
+
+- 读取 2B 与 9B 的 `layer_types`，确认 `3 × linear attention → 1 × full attention` 的循环；
+- 区分 Gated DeltaNet 的 recurrent state 与 full attention 的 KV Cache，记录它们在 prefill / decode 时的 state shape、增长方式与 cache footprint；
+- 记录实际 DeltaNet kernel 或 PyTorch fallback、attention backend，以及短输入下的 prefill / decode 现象；
+- 对比 9B Dense 与 35B-A3B MoE 的层类型、expert/router、total parameters、active parameters 和 LoRA target modules；
+- 核对 MTP 在 checkpoint 与标准 SFT forward 中的实际位置，不从“预训练使用 MTP”推断它会额外参与本项目的 SFT loss。
+
+审计结果写入阶段 10 Notebook，作为后续 QLoRA、生成性能和 MoE capacity run 的结构背景。
+
+#### 10.3　工具栈
 
 在本阶段系统学习：
 
@@ -865,11 +887,14 @@ MiniMind 沿用官方 checkpoint / resume 实现；Qwen 使用 Transformers Trai
 - Accelerate
 - bitsandbytes
 - FlashAttention / SDPA
-- vLLM 或 SGLang
 
 MiniMind 阶段用于理解底层实现，Qwen 阶段用于掌握真实生产生态。
 
-#### 10.3　框架最小实践
+阶段 10 的训练后固定生成直接使用 Transformers：单张 GPU 上先训练、后生成，当前任务规模不需要单独
+部署推理服务。vLLM / SGLang 留作后续出现大规模并发生成、在线 RL rollout 或推理吞吐优化需求时的
+工程扩展，不作为本阶段前置依赖或验收项。
+
+#### 10.4　框架最小实践
 
 工具栈中的每个框架至少完成一次可验证的最小操作：
 
@@ -880,20 +905,20 @@ MiniMind 阶段用于理解底层实现，Qwen 阶段用于掌握真实生产生
 - **TRL**：使用 `SFTTrainer` 跑通一次 SFT，并使用 TRL CLI YAML 保存训练配置；
 - **Accelerate**：通过统一启动配置运行一次训练，使用原生 tracker 记录指标，并从 checkpoint 恢复；
 - **FlashAttention / SDPA**：选择与当前硬件和模型兼容的 attention backend，确认能够稳定完成训练并记录实际 backend；
-- **vLLM 或 SGLang**：任选其一加载训练结果，使用固定 generation config 完成批量生成。
 
 本阶段不要求阅读所有框架源码或掌握全部 API。验收重点是能够说明每个框架负责哪一段流程、接收什么输入、产生什么输出，以及 checkpoint、adapter 和数据如何在框架之间流转。
 
 Qwen 阶段直接采用 TRL 支持的 prompt-completion 或 conversational 数据格式，由训练器应用 chat template 和 completion mask。数据适配层只负责字段映射、类型检查和少量批次抽查，不手写完整模板管线，也不维护第二套 SFT collator。LoRA / QLoRA 使用 PEFT，checkpoint 与日志使用 Transformers / Accelerate 原生能力。
 
-#### 10.4　项目执行顺序
+#### 10.5　项目执行顺序
 
-1. 使用固定数据、generation config 和评估任务建立 Qwen Base baseline；
-2. 使用主流框架完成 QLoRA SFT；
-3. 完成目标任务与通用回归评估；
-4. 重新加载 SFT checkpoint，完成固定 development 评估和一段短 resume 检查，再整理蒸馏专题可直接复用的资产；不执行第二次完整 4B SFT。
+1. 完成 Qwen3.5 hybrid architecture audit；
+2. 使用固定数据、generation config 和评估任务建立 Qwen Base baseline；
+3. 使用主流框架完成 QLoRA SFT；
+4. 完成目标任务与通用回归评估；
+5. 重新加载 SFT checkpoint，完成固定 development 评估和一段短 resume 检查，再整理蒸馏专题可直接复用的资产；不执行第二次完整 9B SFT。
 
-#### 10.5　固定任务与数据基线
+#### 10.6　固定任务与数据基线
 
 正式任务统一采用公开的 `openai/gsm8k`：
 
@@ -911,7 +936,7 @@ Qwen 阶段直接采用 TRL 支持的 prompt-completion 或 conversational 数�
 
 该配置用于 Qwen SFT、后续蒸馏专题及独立 RL 专题。阶段 10 不重新生成 split，只读取并校验阶段 8 的项目级清单。训练数据转换采用可复现的程序化薄适配，只处理字段映射和格式校验；chat template 与 completion mask 交由 TRL 处理，不修改公开标签。
 
-#### 10.6　通用回归评估基线
+#### 10.7　通用回归评估基线
 
 在 GSM8K 与 MATH-500 之外，固定采用 [LightEval 的现成任务](https://huggingface.co/docs/lighteval/available-tasks) 建立三项轻量回归检查：
 
@@ -925,16 +950,18 @@ Qwen 阶段直接采用 TRL 支持的 prompt-completion 或 conversational 数�
 
 完整回归集合只在以下关键 checkpoint 上运行：
 
-1. Qwen3-4B Base；
+1. Qwen3.5-9B Base；
 2. 普通 GSM8K QLoRA SFT；
-3. 蒸馏专题选出的唯一胜出 SFT；
-4. 条件式 8B 验证中实际进入结论表的 checkpoint。
+3. 蒸馏专题中实际进入结论表的唯一胜出 SFT。
 
 阶段 10 只产生前两项结果，其余结果由蒸馏专题继承同一配置按条件补齐。开发模型、失败运行和未入选的中间 adapter 不重复执行完整集合。IFEval、MMLU 和 TruthfulQA 全程只读，不用于选择 checkpoint、调整超参数或生成训练数据；单项 benchmark 结果只作为回归信号，不形成完整安全能力结论。
 
-#### 10.7　gpt-oss-20b 的定位
+#### 10.8　gpt-oss-20b 的定位
 
-gpt-oss-20b 定位为后续蒸馏专题的固定 Teacher。主计划只确认模型来源、Harmony 格式和推理入口，不在阶段 10 生成正式 Teacher 数据。完成 Qwen 项目后，将其用于：
+gpt-oss-20b 定位为后续蒸馏专题的首选 Teacher。Qwen3.8-27B 记录为第二个 Teacher 候选；进入
+蒸馏专题前按可用 GPU、推理框架与固定 generation config 选择其中一个，不在同一主实验矩阵中混用
+两个 Teacher。阶段 10 只确认模型来源、推理格式和入口，不生成正式 Teacher 数据。完成 Qwen 项目后，
+选定 Teacher 将用于：
 
 - 作为 teacher 生成高质量数据；
 - sequence-level distillation；
@@ -942,46 +969,49 @@ gpt-oss-20b 定位为后续蒸馏专题的固定 Teacher。主计划只确认模
 
 不将 gpt-oss-20b 作为第一个正式训练模型。
 
-#### 10.8　领域继续预训练旁路（可选）
+#### 10.9　领域继续预训练旁路（可选）
 
 > **预计总投入**　7～10.5 小时，其中首次学习与执行 5.5～8 小时，第三天复习 1.5～2.5 小时
 >
 > **阶段目标**　体验 Base model 在公开领域语料上继续执行 causal language modeling 的流程，并观察领域 loss 改善与通用能力回退之间的关系。
 
-该旁路只在阶段 10 核心验收完成且对领域适应问题仍有专项兴趣时启动，未执行时不影响进入蒸馏专题。阶段 12 已列入确定路线时，本旁路默认跳过，由 GPT-2 checkpoint 恢复训练承担一次完整的 continued-pretraining 流程实践。需要独立观察数学领域 loss 改善与通用能力回退时，采用 [Alignment Handbook](https://github.com/huggingface/alignment-handbook) commit `1de1fc9` 的 continued pretraining 配方与公开的 [`open-web-math/open-web-math`](https://huggingface.co/datasets/open-web-math/open-web-math)：
+该旁路只在阶段 10 核心验收完成且对领域适应问题仍有专项兴趣时启动，未执行时不影响进入蒸馏专题。后续阶段 12 会包含一次独立的架构研究训练流程，因此本旁路默认跳过。需要独立观察数学领域 loss 改善与通用能力回退时，采用 [Alignment Handbook](https://github.com/huggingface/alignment-handbook) commit `1de1fc9` 的 continued pretraining 配方与公开的 [`open-web-math/open-web-math`](https://huggingface.co/datasets/open-web-math/open-web-math)：
 
-- 模型固定为 `Qwen/Qwen3-0.6B-Base`；
+- 模型固定为 `Qwen/Qwen3.5-2B-Base`；
 - 使用 Hugging Face Datasets streaming，冻结数据 revision，以 seed `42` 确定性抽取并程序化划分 train / validation；
 - 训练预算固定为 10M tokenizer tokens，validation 从同一冻结样本池保留 5%；
 - 文本只进行 tokenizer 编码、定长 packing 和空文本过滤；公开数据已经完成数学内容过滤、质量过滤与去重，本项目不再次清洗或人工筛选；
 - 复用现成 causal language modeling trainer、Accelerate 配置、checkpoint 与 TensorBoard 能力，不实现新的训练器；
 - 只运行一个正式配置，不搜索学习率、数据配比、序列长度或训练轮数。
 
-实验前后比较 OpenWebMath validation loss / perplexity、GSM8K development 和阶段 10 的三项通用回归指标。该实验从原始 Base revision 独立启动，产物不替换 4B SFT baseline，也不进入蒸馏专题，以免把领域继续预训练与后续监督形式混为同一变量。
+实验前后比较 OpenWebMath validation loss / perplexity、GSM8K development 和阶段 10 的三项通用回归指标。该实验从原始 Base revision 独立启动，产物不替换 9B SFT baseline，也不进入蒸馏专题，以免把领域继续预训练与后续监督形式混为同一变量。
 
 最小交付物包括一份训练 YAML、一条 validation loss 曲线，以及一张 Base / CPT 的领域 loss、数学能力和通用回归对照表。一次对照足以完成本阶段，不因效果有限而扩大数据量或追加 SFT 矩阵。
 
-#### 10.9　阶段交付物
+#### 10.10　阶段交付物
 
 - 固定 revision 与 split 的 GSM8K 数据基线
+- Qwen3.5 hybrid architecture audit：layer types、state/cache、backend、MTP 与 Dense/MoE 对照记录
 - GSM8K 到 TRL 标准格式的确定性薄适配脚本
 - Qwen Base baseline
 - 一份框架职责与数据、checkpoint、adapter 流转记录
 - Transformers、Datasets、PEFT、bitsandbytes、TRL 和 Accelerate 的最小实践结果
-- 使用 vLLM 或 SGLang 完成的固定参数批量生成结果
+- 使用 Transformers 完成的固定参数批量生成结果
 - LightEval 的 GSM8K、MATH-500 与三项通用回归评估结果
 - QLoRA SFT checkpoint 与完整评估结果
 - 可供蒸馏专题直接继承的数据 split、SFT baseline、评估配置和 checkpoint 索引
 
-#### 10.10　验收标准
+#### 10.11　验收标准
 
 - GSM8K train、development、test 和 MATH-500 的用途边界清晰；
 - 正式项目未引入人工标注或逐条数据修正；
 - 能够说明各框架在后训练流程中的职责，以及数据和模型产物如何流转；
+- 能够说明本次 Qwen3.5 的 linear-attention state、KV Cache、实际 backend 与 MTP 的运行边界；
 - 能够独立加载基础模型、训练 adapter、恢复 checkpoint，并加载训练结果完成批量生成；
 - 开发模型能够稳定完成数据、模板和训练配置调试；
-- 4B QLoRA SFT 已完成独立评估、checkpoint 重载和短 resume 复现检查，未重复执行完整训练；
-- Qwen3-4B Base 与普通 QLoRA SFT 已按同一冻结配置完成通用回归评估；
+- 9B QLoRA SFT 已完成独立评估、checkpoint 重载和短 resume 复现检查，未重复执行完整训练；
+- Qwen3.5-9B Base 与普通 QLoRA SFT 已按同一冻结配置完成通用回归评估；
+- Qwen3.5-35B-A3B-Base 的固定 MoE capacity run 已记录参数、显存与吞吐；
 - 未在主计划中提前构造正式 Teacher 数据或数学 preference pairs；
 - 蒸馏专题可以直接读取本阶段的数据 split、baseline 和评估配置。
 
@@ -989,10 +1019,10 @@ gpt-oss-20b 定位为后续蒸馏专题的固定 Teacher。主计划只确认模
 
 ### 阶段 11　RL 系统学习
 
-本阶段已从主计划延期到 `study/rl-system`。DPO、Reward Model、PPO、GRPO 和后续选定的一种
-Online RL 变体统一在该分支学习，不参与 Core、Distillation 或 Architecture 的验收与工期。
+本阶段在蒸馏专题结束后启动，并在阶段 12 之前完成。DPO、Reward Model、PPO、GRPO 和后续选定的一种
+Online RL 变体统一在 `study/rl-system` 分支学习；MiniMind DPO 结果作为 offline preference baseline。
 
-独立专题的启动入口记录在 [`TODO.md`](./TODO.md)。
+独立专题的启动入口记录在 [`TODO.md`](./TODO.md)。开始时单独冻结模型、数据、评估、训练预算与专题工期；它不回溯改变阶段 10 或蒸馏专题的结论，但作为进入阶段 12 的前置学习。
 
 ---
 
@@ -1000,47 +1030,22 @@ Online RL 变体统一在该分支学习，不参与 Core、Distillation 或 Arc
 
 > **阶段性质**　主计划最后阶段。
 >
-> **预计总投入**　193～255 小时，按独立计划的 6～7.5 个相对研究周执行
+> **预计总投入**　阶段 11 结项后随研究问题重新估算；当前 GQA 候选草案的 193～255 小时不构成正式承诺
 >
-> **阶段目标**　围绕 GQA 完成一次已有 checkpoint 迁移和一次从头预训练消融，建立架构研究所需的实现、控制变量与归因能力。
+> **阶段目标**　在阶段 11 后依据当时的 efficient-attention 进展冻结一个可控研究问题，建立架构研究所需的实现、控制变量与归因能力。
 
-本阶段执行独立的 [模型架构迁移与研究学习计划](./架构迁移与研究计划.md)，采用一条固定路线：
+当前的 [模型架构迁移与研究学习计划](./架构迁移与研究计划.md) 保留 GPT-2 / OLMo 3 的 GQA 方案作为候选草案，不是已冻结的执行路线。阶段 12 启动前重新调研并在以下范围内选择一个主变量：
 
 ```text
-GPT-2 Medium 官方 checkpoint
-→ 基于冻结官方实现的本地薄改、SDPA 与基础动态 KV Cache
-→ MHA-to-GQA 权重转换与 MHA / GQA 同预算训练
-→ OLMo 3 100M 官方预设冒烟测试
-→ OLMo 3 190M 候选筛选
-→ OLMo 3 370M baseline / 最佳 GQA 双 seed 验证
+full-attention baseline
+→ GQA / KV-head reduction baseline
+→ 选择一个当时有公开实现与可控训练条件的 efficient-attention 方向
+→ 在质量、训练效率与推理效率的同一口径下比较
 ```
 
-OLMo 部分统一采用 OLMo 3 的 100M、190M 和 370M 官方预设。该选择省去 OLMo 2 风格小规模配置的结构维护，使核心修改收敛到 `n_kv_heads`、数据 manifest、token budget 和 seed。
+GQA 仍是必要的参照点；hybrid linear attention、sparse attention 或届时更合适的公开架构是候选方向。模型家族、数据、规模、训练预算和实验矩阵均在研究问题冻结后再确定。
 
-阶段 12 使用 Hugging Face 上的公开 checkpoint、nanoGPT 固定 OpenWebText baseline 与 DataDecide 预分词 shards。数据处理限于执行现成预处理脚本、版本冻结、自动完整性检查和少量只读抽查，不安排语料清洗、人工标注或规则改写。
-
-QK-Norm、FFN、MoE、位置编码和长上下文训练均保留为结项后的独立选题。核心阶段不同时引入第二个架构变量。
-
-#### 12.1　阶段交付物
-
-- GPT-2 兼容实现、权重转换、correctness tests 与统一推理 benchmark
-- MHA 同预算继续预训练对照，以及 GQA-8 / GQA-4 的即时迁移损失和恢复曲线
-- TTFT、TPOT、GQA backend、Q/K/V shape 与 KV Cache layout 审计
-- OLMo 3 190M 的 MHA / GQA / MQA 筛选结果
-- OLMo 3 370M baseline 与最佳 GQA 的双 seed 正式结果
-- 固定配置、数据 manifest、checkpoint 索引、结果 JSON 与分析 notebook
-- 质量、训练效率、推理效率和结论边界说明
-
-#### 12.2　验收标准
-
-- 官方 GPT-2 与本地兼容实现通过 logits、loss 和 greedy generation 对齐；
-- KV Cache 与非 Cache 的固定 greedy generation 一致；
-- GPT-2 GQA 转换与固定 token budget 恢复训练完成；
-- MHA 同预算对照能够区分 OpenWebText 继续适应与 GQA 恢复；
-- OLMo 3 对照只改变 `n_kv_heads`，其余核心条件保持一致；
-- OLMo 初始化配对、实际 attention backend 与 KV Cache layout 已通过审计；
-- 370M baseline 与最佳 GQA 完成两个 seed，或具有符合预设规则的停止记录；
-- 实验结果能够区分迁移损失、架构差异、seed 波动与系统测量噪声。
+阶段 12 的正式交付物、验收标准和预算随该冻结决定更新；在此之前不启动 GPT-2 或 OLMo 3 训练，也不将当前 GQA 草案当作必须完成的承诺。
 
 ---
 
@@ -1102,17 +1107,18 @@ QK-Norm、FFN、MoE、位置编码和长上下文训练均保留为结项后的�
 
 - 在开发模型上完成调试；
 - 跑通 Transformers、Datasets、PEFT、TRL、Accelerate 和量化训练的最小框架流程；
-- 完成 4B QLoRA SFT、完整评估，以及 checkpoint 重载和短 resume 复现检查；
+- 完成 9B QLoRA SFT、完整评估，以及 checkpoint 重载和短 resume 复现检查；
 - 完成 Base 与 SFT 的指令遵循、通用能力和真实性风险回归检查；
 - 使用固定 generation config 完成批量生成与结果对比；
 - 已归档蒸馏专题可直接复用的数据 split、配置、baseline 和 checkpoint 索引。
 
 ### 里程碑六　最终研究阶段
 
-> **覆盖阶段**　12
+> **覆盖阶段**　11、12
 >
 > **目标开始时间**　蒸馏专题完成后
 
 #### 完成标志
 
-- 按 [模型架构迁移与研究学习计划](./架构迁移与研究计划.md) 完成 GPT-2 迁移与 OLMo 3 GQA 受控研究。
+- 完成 `study/rl-system` 的独立 RL 系统学习；
+- 在其结项后重新冻结阶段 12 的 efficient-attention 研究问题、计划与验收标准。

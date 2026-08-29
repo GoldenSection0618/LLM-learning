@@ -1,0 +1,21 @@
+{
+  "profile": "stage9_minimind_reproduction",
+  "model_config": "docs/stages/05_sft/configs/mini64.json",
+  "checkpoint": "checkpoints/minimind/stage5/mini64/weights_step_56480.pth",
+  "data_manifest": "outputs/minimind/stage5/mini64/data_manifest.json",
+  "generation_config": "docs/stages/09_experiment_reproducibility/configs/generation.json",
+  "seed": 42,
+  "validation_rows": 2048,
+  "numeric_fields": [
+    "validation_loss",
+    "perplexity"
+  ],
+  "exact_fields": [
+    "greedy_token_ids"
+  ],
+  "absolute_tolerance": 0.000001,
+  "run_outputs": [
+    "outputs/minimind/stage9/reproduction/run_1.json",
+    "outputs/minimind/stage9/reproduction/run_2.json"
+  ]
+}

@@ -1,0 +1,17 @@
+model_name_or_path: Qwen/Qwen3.5-2B-Base
+dataset_name: stage10_dataset_placeholder
+seed: 42
+learning_rate: 2.0e-5
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 16
+max_length: 2048
+num_train_epochs: 1
+bf16: true
+gradient_checkpointing: true
+eval_strategy: steps
+eval_steps: 100
+save_strategy: steps
+save_steps: 100
+logging_steps: 10
+report_to: tensorboard
+output_dir: outputs/qwen/stage10/sft

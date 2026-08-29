@@ -1,0 +1,37 @@
+{
+  "experiment": "experiment_name",
+  "git_commit": "commit_at_run_time",
+  "command": "exact command",
+  "model": {
+    "name": "model name",
+    "checkpoint": "checkpoint path",
+    "trainable_parameters": 0
+  },
+  "dataset": {
+    "name": "dataset name",
+    "revision": "dataset revision",
+    "split": "validation"
+  },
+  "seed": 42,
+  "hardware": {
+    "device": "cuda:0",
+    "gpu": "GPU name",
+    "dtype": "bfloat16"
+  },
+  "training": {
+    "effective_batch_size": 0,
+    "total_tokens": 0,
+    "peak_memory_bytes": 0,
+    "wall_time_seconds": 0
+  },
+  "evaluation": {
+    "validation_loss": null,
+    "perplexity": null,
+    "task_metrics": {}
+  },
+  "artifacts": {
+    "metrics": "metrics path",
+    "checkpoint": "checkpoint path",
+    "generation": "generation path"
+  }
+}
